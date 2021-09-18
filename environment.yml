@@ -1,0 +1,7 @@
+name: airflow_ml
+channels:
+  - conda-forge
+dependencies:
+  - mlflow==1.20.2
+  - airflow==2.1.2
+  - ipykernel==6.2.0

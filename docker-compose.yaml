@@ -191,5 +191,16 @@ services:
     # tty: true
     # command: /bin/bash
 
+  dev:
+    build:
+      context: ./
+      dockerfile: ./docker/dev_container/Dockerfile
+    container_name: dev
+    volumes:
+      - ./dags:/code/dags
+      - ./logs:/code/logs
+      - ./src:/code/src
+    tty: true
+
 volumes:
   postgres-db-volume:
