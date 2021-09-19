@@ -171,7 +171,7 @@ services:
     restart: always
 
   mlflow:
-    image: alenjacob/mlflow
+    image: ${DOCKERHUB_ACC}/mlflow
     build: docker/mlflow/.
     container_name: mlflow
     ports:
@@ -193,7 +193,7 @@ services:
     # command: /bin/bash
 
   dev:
-    image: alenjacob/airflow-ml-dev
+    image: ${DOCKERHUB_ACC}/airflow-ml-dev
     build:
       context: ./
       dockerfile: ./docker/dev_container/Dockerfile
