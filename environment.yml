@@ -5,3 +5,5 @@ dependencies:
   - mlflow==1.20.2
   - airflow==2.1.2
   - ipykernel==6.2.0
+  # - pyspark==3.1.2
+  # - openjdk==8.0.152
