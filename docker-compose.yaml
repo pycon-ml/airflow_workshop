@@ -47,6 +47,8 @@ x-airflow-common:
   build:
     context: ./
     dockerfile: ./docker/airflow/Dockerfile
+    args:
+      AIRFLOW_VERSION: 2.1.4
   environment:
     &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: CeleryExecutor
