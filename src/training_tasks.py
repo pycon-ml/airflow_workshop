@@ -1,6 +1,7 @@
 import os
 import pathlib
 import shutil
+import mlflow
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report
@@ -124,6 +125,7 @@ def model_training(*args, **kwargs):
     print(f"y train head: {y_train[:10]}")
     print(f"y test shape: {y_test.shape}")
 
+    mlflow.sklearn.autolog()
     rfc = RandomForestClassifier(n_estimators=200)
     rfc.fit(X_train, y_train)
     joblib.dump(rfc, pathlib.Path(run_path, "random_forest_model.sav"))
