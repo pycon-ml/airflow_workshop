@@ -1,7 +1,9 @@
 import os
 import pathlib
 import shutil
+from hyperopt import Trials, hp, STATUS_OK, tpe, fmin
 import mlflow
+import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report
@@ -124,9 +126,29 @@ def model_training(*args, **kwargs):
     print(f"y train shape: {y_train.shape}")
     print(f"y train head: {y_train[:10]}")
     print(f"y test shape: {y_test.shape}")
-
+    
+    def hyperopt_train_test(params):
+        clf = RandomForestClassifier(**params)
+        best_score = cross_val_score(clf, X_train, y_train).mean()
+        return {'loss': best_score, 'params': params, 'status': STATUS_OK}
+    
+    space4rf = {
+        'max_depth': hp.choice('max_depth', range(1,20)),
+        'max_features': hp.choice('max_features', range(1,5)),
+        'n_estimators': hp.choice('n_estimators', range(1,20)),
+        'criterion': hp.choice('criterion', ["gini", "entropy"])
+    }
+    
+    trials = Trials()
+    best = fmin(fn = hyperopt_train_test, space = space4rf, algo = tpe.suggest, 
+                max_evals = 10, trials = trials)
+    print('optimization complete')
+    best_model = trials.results[np.argmin([r['loss'] for r in trials.results])]
+    params=best_model['params']
+    print('best: ', params)
+    
     mlflow.sklearn.autolog()
-    rfc = RandomForestClassifier(n_estimators=200)
+    rfc = RandomForestClassifier(**params)
     rfc.fit(X_train, y_train)
     joblib.dump(rfc, pathlib.Path(run_path, "random_forest_model.sav"))
 
