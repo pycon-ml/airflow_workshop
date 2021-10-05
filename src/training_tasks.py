@@ -9,6 +9,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 import pyarrow as pa
 from pyarrow import parquet
 import joblib
@@ -147,7 +148,6 @@ def model_training(*args, **kwargs):
     params=best_model['params']
     print('best: ', params)
     
-    mlflow.sklearn.autolog()
     rfc = RandomForestClassifier(**params)
     rfc.fit(X_train, y_train)
     joblib.dump(rfc, pathlib.Path(run_path, "random_forest_model.sav"))
@@ -169,6 +169,13 @@ def model_evaluation(*args, **kwargs):
     print(f"Random forest model: {rfc_eval.mean()}")
 
 
+def eval_metrics(actual, pred):
+    rmse = np.sqrt(mean_squared_error(actual, pred))
+    mae = mean_absolute_error(actual, pred)
+    r2 = r2_score(actual, pred)
+    return rmse, mae, r2
+
+
 def model_validation(*args, **kwargs):
     """Model validation
     """
@@ -183,3 +190,11 @@ def model_validation(*args, **kwargs):
 
     pred_rfc = rfc.predict(X_test)
     print("\n" + classification_report(y_test, pred_rfc))
+    
+    with mlflow.start_run(run_name=kwargs["dag_run"].run_id):
+        (rmse, mae, r2) = eval_metrics(y_test, pred_rfc)
+        mlflow.log_params(rfc.get_params())
+        mlflow.log_metric("rmse", rmse)
+        mlflow.log_metric("r2", r2)
+        mlflow.log_metric("mae", mae)
+        mlflow.sklearn.log_model(sk_model=rfc, artifact_path="model", registered_model_name="ElasticnetWineModel")
