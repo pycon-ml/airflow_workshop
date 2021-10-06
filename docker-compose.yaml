@@ -44,7 +44,11 @@
 version: '3'
 x-airflow-common:
   &airflow-common
-  image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:2.1.2}
+  build:
+    context: ./
+    dockerfile: ./docker/airflow/Dockerfile
+    args:
+      AIRFLOW_VERSION: 2.1.4
   environment:
     &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: CeleryExecutor
@@ -58,10 +62,18 @@ x-airflow-common:
     AIRFLOW__SCHEDULER__MIN_FILE_PROCESS_INTERVAL: 10
     AIRFLOW__SCHEDULER__DAG_DIR_LIST_INTERVAL: 30
     _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-}
+    PYTHONPATH: /opt/airflow/src
+    DATA_SOURCE_FOLDER: /opt/airflow/source_data
+    DATA_INTERMEDIA_FOLDER: /opt/airflow/intermedia_data
+    MLFLOW_TRACKING_URI: http://mlflow:5000
   volumes:
     - ./dags:/opt/airflow/dags
     - ./logs:/opt/airflow/logs
+    - ./src:/opt/airflow/src
     - ./plugins:/opt/airflow/plugins
+    - ./data/source:/opt/airflow/source_data
+    - ./data/intermedia:/opt/airflow/intermedia_data
+    - ${ARTIFACT_PATH}:${ARTIFACT_PATH}
   user: "${AIRFLOW_UID:-50000}:${AIRFLOW_GID:-50000}"
   depends_on:
     redis:
@@ -102,7 +114,7 @@ services:
       POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
     hostname: postgresql
     restart: always
-    
+
   redis:
     image: redis:latest
     ports:
@@ -192,69 +204,71 @@ services:
     # tty: true
     # command: /bin/bash
 
-  spark-master:
-    image: ${DOCKERHUB_ACC}/spark
-    build:
-      context: ./
-      dockerfile: ./docker/spark/Dockerfile
-    ports:
-      - "9090:8080"
-      - "7077:7077"
-    volumes:
-       - ./apps:/opt/spark-apps
-       - ./data:/opt/spark-data
-    environment:
-      - SPARK_LOCAL_IP=spark-master
-      - SPARK_WORKLOAD=master
-  spark-worker-a:
-    image: ${DOCKERHUB_ACC}/spark
-    ports:
-      - "9091:8080"
-      - "7000:7000"
-    depends_on:
-      - spark-master
-    environment:
-      - SPARK_MASTER=spark://spark-master:7077
-      - SPARK_WORKER_CORES=1
-      - SPARK_WORKER_MEMORY=1G
-      - SPARK_DRIVER_MEMORY=1G
-      - SPARK_EXECUTOR_MEMORY=1G
-      - SPARK_WORKLOAD=worker
-      - SPARK_LOCAL_IP=spark-worker-a
-    volumes:
-       - ./apps:/opt/spark-apps
-       - ./data:/opt/spark-data
-  spark-worker-b:
-    image: ${DOCKERHUB_ACC}/spark
-    ports:
-      - "9092:8080"
-      - "7001:7000"
-    depends_on:
-      - spark-master
-    environment:
-      - SPARK_MASTER=spark://spark-master:7077
-      - SPARK_WORKER_CORES=1
-      - SPARK_WORKER_MEMORY=1G
-      - SPARK_DRIVER_MEMORY=1G
-      - SPARK_EXECUTOR_MEMORY=1G
-      - SPARK_WORKLOAD=worker
-      - SPARK_LOCAL_IP=spark-worker-b
-    volumes:
-        - ./apps:/opt/spark-apps
-        - ./data:/opt/spark-data
+  # spark-master:
+  #   image: ${DOCKERHUB_ACC}/spark
+  #   build:
+  #     context: ./
+  #     dockerfile: ./docker/spark/Dockerfile
+  #   ports:
+  #     - "9090:8080"
+  #     - "7077:7077"
+  #   volumes:
+  #      - ./apps:/opt/spark-apps
+  #      - ./data:/opt/spark-data
+  #   environment:
+  #     - SPARK_LOCAL_IP=spark-master
+  #     - SPARK_WORKLOAD=master
+  # spark-worker-a:
+  #   image: ${DOCKERHUB_ACC}/spark
+  #   ports:
+  #     - "9091:8080"
+  #     - "7000:7000"
+  #   depends_on:
+  #     - spark-master
+  #   environment:
+  #     - SPARK_MASTER=spark://spark-master:7077
+  #     - SPARK_WORKER_CORES=1
+  #     - SPARK_WORKER_MEMORY=1G
+  #     - SPARK_DRIVER_MEMORY=1G
+  #     - SPARK_EXECUTOR_MEMORY=1G
+  #     - SPARK_WORKLOAD=worker
+  #     - SPARK_LOCAL_IP=spark-worker-a
+  #   volumes:
+  #      - ./apps:/opt/spark-apps
+  #      - ./data:/opt/spark-data
+  # spark-worker-b:
+  #   image: ${DOCKERHUB_ACC}/spark
+  #   ports:
+  #     - "9092:8080"
+  #     - "7001:7000"
+  #   depends_on:
+  #     - spark-master
+  #   environment:
+  #     - SPARK_MASTER=spark://spark-master:7077
+  #     - SPARK_WORKER_CORES=1
+  #     - SPARK_WORKER_MEMORY=1G
+  #     - SPARK_DRIVER_MEMORY=1G
+  #     - SPARK_EXECUTOR_MEMORY=1G
+  #     - SPARK_WORKLOAD=worker
+  #     - SPARK_LOCAL_IP=spark-worker-b
+  #   volumes:
+  #       - ./apps:/opt/spark-apps
+  #       - ./data:/opt/spark-data
 
-  dev:
-    image: ${DOCKERHUB_ACC}/airflow-ml-dev
-    build:
-      context: ./
-      dockerfile: ./docker/dev_container/Dockerfile
-    container_name: dev
-    volumes:
-      - ./dags:/code/dags
-      - ./logs:/code/logs
-      - ./src:/code/src    
-    environment:
-      MOODLE_DOCKER_DBTYPE: pgsql
-    tty: true
+  # dev:
+  #   image: ${DOCKERHUB_ACC}/airflow-ml-dev
+  #   build:
+  #     context: ./
+  #     dockerfile: ./docker/dev_container/Dockerfile
+  #   container_name: dev
+  #   volumes:
+  #     - ./dags:/code/dags
+  #     - ./logs:/code/logs
+  #     - ./src:/code/src
+  #     - ./data/source:/code/source_data
+  #     - ./data/intermedia:/code/intermedia_data
+  #   environment:
+  #     MOODLE_DOCKER_DBTYPE: pgsql
+  #   tty: true
 volumes:
   postgres-db-volume:
