@@ -38,7 +38,7 @@ with DAG(
     "training",
     default_args=default_args,
     description="Training DAG",
-    schedule_interval=timedelta(days=1),
+    schedule_interval=None,
     start_date=days_ago(2),
     tags=["example", "training"],
 ) as dag:
