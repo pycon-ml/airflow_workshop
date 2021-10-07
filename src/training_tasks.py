@@ -20,10 +20,10 @@ def data_extraction(*args, **kwargs):
     In this example, it will copy data from source folder to intermedia folder
     """
     print(f'Run data_extraction with run_id: {kwargs["dag_run"].run_id}')
-    assert os.environ.get("DATA_SOURCE_FOLDER")
+    assert os.environ.get("DATA_TRAINING_FOLDER")
     assert os.environ.get("DATA_INTERMEDIA_FOLDER")
     from_path = pathlib.Path(
-        os.environ.get("DATA_SOURCE_FOLDER"), "winequality-red.csv"
+        os.environ.get("DATA_TRAINING_FOLDER"), "winequality-red.csv"
     )
     to_path = pathlib.Path(
         os.environ.get("DATA_INTERMEDIA_FOLDER"), kwargs["dag_run"].run_id
@@ -53,8 +53,8 @@ def _1d_nparray_to_parquet(array, path):
 
 def _2d_nparray_to_parquet(array, path):
     table = pa.Table.from_arrays(
-        array, names=[str(i) for i in range(len(array))],  # give names to each columns
-    )
+        array, names=[str(i) for i in range(len(array))],
+    )  # give names to each columns
     parquet.write_table(table, path)
 
 
@@ -127,27 +127,32 @@ def model_training(*args, **kwargs):
     print(f"y train shape: {y_train.shape}")
     print(f"y train head: {y_train[:10]}")
     print(f"y test shape: {y_test.shape}")
-    
+
     def hyperopt_train_test(params):
         clf = RandomForestClassifier(**params)
         best_score = cross_val_score(clf, X_train, y_train).mean()
-        return {'loss': best_score, 'params': params, 'status': STATUS_OK}
-    
+        return {"loss": best_score, "params": params, "status": STATUS_OK}
+
     space4rf = {
-        'max_depth': hp.choice('max_depth', range(1,20)),
-        'max_features': hp.choice('max_features', range(1,5)),
-        'n_estimators': hp.choice('n_estimators', range(1,20)),
-        'criterion': hp.choice('criterion', ["gini", "entropy"])
+        "max_depth": hp.choice("max_depth", range(1, 20)),
+        "max_features": hp.choice("max_features", range(1, 5)),
+        "n_estimators": hp.choice("n_estimators", range(1, 20)),
+        "criterion": hp.choice("criterion", ["gini", "entropy"]),
     }
-    
+
     trials = Trials()
-    best = fmin(fn = hyperopt_train_test, space = space4rf, algo = tpe.suggest, 
-                max_evals = 10, trials = trials)
-    print('optimization complete')
-    best_model = trials.results[np.argmin([r['loss'] for r in trials.results])]
-    params=best_model['params']
-    print('best: ', params)
-    
+    best = fmin(
+        fn=hyperopt_train_test,
+        space=space4rf,
+        algo=tpe.suggest,
+        max_evals=10,
+        trials=trials,
+    )
+    print("optimization complete")
+    best_model = trials.results[np.argmin([r["loss"] for r in trials.results])]
+    params = best_model["params"]
+    print("best: ", params)
+
     rfc = RandomForestClassifier(**params)
     rfc.fit(X_train, y_train)
     joblib.dump(rfc, pathlib.Path(run_path, "random_forest_model.sav"))
@@ -190,11 +195,16 @@ def model_validation(*args, **kwargs):
 
     pred_rfc = rfc.predict(X_test)
     print("\n" + classification_report(y_test, pred_rfc))
-    
+
     with mlflow.start_run(run_name=kwargs["dag_run"].run_id):
         (rmse, mae, r2) = eval_metrics(y_test, pred_rfc)
         mlflow.log_params(rfc.get_params())
         mlflow.log_metric("rmse", rmse)
         mlflow.log_metric("r2", r2)
         mlflow.log_metric("mae", mae)
-        mlflow.sklearn.log_model(sk_model=rfc, artifact_path="model", registered_model_name="ElasticnetWineModel")
+        mlflow.sklearn.log_model(
+            sk_model=rfc,
+            artifact_path="model",
+            registered_model_name="ElasticnetWineModel",
+        )
+
