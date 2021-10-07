@@ -40,14 +40,17 @@ with DAG(
         get_input = PythonOperator(
             task_id="fetch_input_" + "_".join(task.name.split()).lower(),
             python_callable=prediction_tasks.get_input,
+            op_kwargs={"input": task.input_file, "output": task.output_file},
         )
         predict = PythonOperator(
             task_id="predict_" + "_".join(task.name.split()).lower(),
             python_callable=prediction_tasks.prediction,
+            op_kwargs={"input": task.input_file, "output": task.output_file},
         )
         output_result = PythonOperator(
             task_id="output_result_" + "_".join(task.name.split()).lower(),
             python_callable=prediction_tasks.output_result,
+            op_kwargs={"input": task.input_file, "output": task.output_file},
         )
         start >> get_input >> predict >> output_result >> end
 
