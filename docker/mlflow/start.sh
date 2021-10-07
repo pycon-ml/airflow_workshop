@@ -7,6 +7,8 @@ set -o pipefail
 # uncomment below when you see any issue with db...
 # mlflow db upgrade $DB_URI
 
+mkdir -p $ARTIFACT_PATH
+
 mlflow server \
     --backend-store-uri $DB_URI \
     --host 0.0.0.0 \

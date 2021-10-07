@@ -73,7 +73,7 @@ x-airflow-common:
     - ./plugins:/opt/airflow/plugins
     - ./data/source:/opt/airflow/source_data
     - ./data/intermedia:/opt/airflow/intermedia_data
-    - ${ARTIFACT_PATH}:${ARTIFACT_PATH}
+    - ./data/artifacts:${ARTIFACT_PATH}
   user: "${AIRFLOW_UID:-50000}:${AIRFLOW_GID:-50000}"
   depends_on:
     redis:
@@ -192,7 +192,7 @@ services:
       - postgresql
       - waitfordb
     volumes:
-      - ${ARTIFACT_PATH}:${ARTIFACT_PATH}
+      - ./data/artifacts:${ARTIFACT_PATH}
     environment:
       DB_URI: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgresql:5432/mlflow-db
       VIRTUAL_HOST: ${HOST}
