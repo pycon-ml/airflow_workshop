@@ -14,7 +14,8 @@ import joblib
 import pyarrow as pa
 from pyarrow import parquet
 
-#Helper methods
+# Helper methods
+
 
 def _1d_nparray_to_parquet(array, path):
     table = pa.Table.from_arrays(
@@ -42,6 +43,7 @@ def _parquet_to_1d_nparray(path):
     table_from_parquet = parquet.read_table(path)
     matrix_from_parquet = table_from_parquet.to_pandas().T.to_numpy()
     return matrix_from_parquet[0]
+
 
 def data_extraction(run_id, **context):
     """
@@ -83,7 +85,7 @@ def data_preparation(run_id, **context):
     )
     wine = pd.read_csv(input_path)
 
-    # Now separate the dataset as response/target variable and feature variables
+    # Separate the dataset as response/target variable and feature variables
     X = wine.drop("quality", axis=1)
     y = wine["quality"]
 
@@ -188,6 +190,14 @@ def model_evaluation(run_id, **context):
     rfc_eval = cross_val_score(estimator=rfc, X=X_train, y=y_train, cv=10)
     print(f"Random forest model: {rfc_eval.mean()}")
 
+
+def eval_metrics(actual, pred):
+    rmse = np.sqrt(mean_squared_error(actual, pred))
+    mae = mean_absolute_error(actual, pred)
+    r2 = r2_score(actual, pred)
+    return rmse, mae, r2
+
+
 def model_validation(run_id, model_tracking, **context):
     """Model validation"""
     assert os.environ.get("DATA_INTERMEDIA_FOLDER")
@@ -202,14 +212,6 @@ def model_validation(run_id, model_tracking, **context):
     # Print classification report
     print("\n" + classification_report(y_test, pred_rfc))
 
-    def eval_metrics(actual, pred):
-        # Calculate and return rmse, mae and r2 scores
-        rmse = np.sqrt(mean_squared_error(actual, pred))
-        mae = mean_absolute_error(actual, pred)
-        r2 = r2_score(actual, pred)
-        return rmse, mae, r2
-
-    # Log model and metrics into mlflow
     with mlflow.start_run(run_name=run_id):
         (rmse, mae, r2) = eval_metrics(y_test, pred_rfc)
         mlflow.log_params(rfc.get_params())

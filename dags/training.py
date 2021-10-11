@@ -71,12 +71,11 @@ with DAG(
         op_kwargs=training_config,
     )
 
-
     data_extraction.doc_md = dedent(
         """\
     #### Task Documentation
     This task copies data from source folder to intermedia folder
-    
+
     """
     )
 
@@ -88,39 +87,15 @@ with DAG(
     """
     )
 
-
     data_preparation.doc_md = dedent(
         """\
     #### Task Documentation
-    This task splits the data into train and test and save them as parquet files
+    This task splits the data into train and test and save them as
+    parquet files
     """
     )
 
-    model_training.doc_md = dedent(
-        """\
-    #### Task Documentation
-    This task contains model training and hyperparameter tuning using hyperopt
-    """
-    )
-
-    model_evaluation.doc_md = dedent(
-        """
-    #### Task Documentation
-    This task does evaluation for model using cross validation
-    """
-    )
-
-    model_validation.doc_md = dedent(
-        """
-    #### Task Documentation
-    This task validates the model and logs into mlflow
-    """
-    )
-
-
-    dag.doc_md = (
-        __doc__  # providing that you have a docstring at the beginning of the DAG
-    )
+    dag.doc_md = __doc__
     dag.doc_md = """
     Training DAG
     """  # otherwise, type it like this
