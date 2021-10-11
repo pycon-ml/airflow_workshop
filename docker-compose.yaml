@@ -63,12 +63,14 @@ x-airflow-common:
     AIRFLOW__SCHEDULER__DAG_DIR_LIST_INTERVAL: 30
     _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-}
     PYTHONPATH: /opt/airflow/src
+    CONFIG_FOLDER: /opt/airflow/config
     DATA_TRAINING_FOLDER: /opt/airflow/training_data
     DATA_INTERMEDIA_FOLDER: /opt/airflow/intermedia_data
     DATA_PREDICTION_INPUT: /opt/airflow/prediction_input
     DATA_PREDICTION_OUTPUT: /opt/airflow/prediction_output
     MLFLOW_TRACKING_URI: http://mlflow:5000
   volumes:
+    - ./config:/opt/airflow/config
     - ./dags:/opt/airflow/dags
     - ./logs:/opt/airflow/logs
     - ./src:/opt/airflow/src

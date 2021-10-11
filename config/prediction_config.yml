@@ -1,0 +1,7 @@
+pred_set_names:
+  - one
+  - two
+  - three
+
+input_file: wine_set_{}.csv
+output_file: wine_set_{}_quality.csv

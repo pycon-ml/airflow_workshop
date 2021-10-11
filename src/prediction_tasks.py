@@ -7,31 +7,30 @@ import numpy as np
 from sklearn.preprocessing import StandardScaler
 
 
-def get_input(*args, **kwargs):
+def get_input(run_id, input, **context):
     """Get input
     In this example, it will copy data from source folder to intermedia folder
     """
-    print(f'Run get_input with run_id: {kwargs["dag_run"].run_id}')
+    print(f"Run get_input with run_id: {run_id}")
     assert os.environ.get("DATA_PREDICTION_INPUT")
     assert os.environ.get("DATA_INTERMEDIA_FOLDER")
-    from_path = pathlib.Path(os.environ.get("DATA_PREDICTION_INPUT"), kwargs["input"])
-    to_path = pathlib.Path(
-        os.environ.get("DATA_INTERMEDIA_FOLDER"), kwargs["dag_run"].run_id
-    )
+    from_path = pathlib.Path(os.environ.get("DATA_PREDICTION_INPUT"), input)
+    to_path = pathlib.Path(os.environ.get("DATA_INTERMEDIA_FOLDER"), run_id)
     to_path.mkdir(parents=True, exist_ok=True)
     shutil.copy(from_path, to_path)
 
 
-def prediction(*args, **kwargs):
+def prediction(run_id, input, output, **context):
     """Prediction
-    In this example, it will use the input data on intermedia folder and run model to predict
+    In this example, it will use the input data on intermedia folder and run
+    model to predict
     """
-    print(f'Run prediction with run_id: {kwargs["dag_run"].run_id}')
+    print(f"Run prediction with run_id: {run_id}")
     assert os.environ.get("DATA_INTERMEDIA_FOLDER")
     input_path = pathlib.Path(
         os.environ.get("DATA_INTERMEDIA_FOLDER"),
-        kwargs["dag_run"].run_id,
-        kwargs["input"],
+        run_id,
+        input,
     )
     wine = pd.read_csv(input_path)
     print(f"Input data: {wine}")
@@ -45,24 +44,26 @@ def prediction(*args, **kwargs):
     print(f"Predict result: {predict_result}")
     output_file = pathlib.Path(
         os.environ.get("DATA_INTERMEDIA_FOLDER"),
-        kwargs["dag_run"].run_id,
-        kwargs["output"],
+        run_id,
+        output,
     )
     np.savetxt(output_file, predict_result, delimiter=",")
 
 
-def output_result(*args, **kwargs):
+def output_result(run_id, output, **context):
     """Extract data
     In this example, it will copy predict result to output folder
     """
-    print(f'Run output_result with run_id: {kwargs["dag_run"].run_id}')
+    print(f"Run output_result with run_id: {run_id}")
     assert os.environ.get("DATA_PREDICTION_OUTPUT")
     assert os.environ.get("DATA_INTERMEDIA_FOLDER")
     from_path = pathlib.Path(
         os.environ.get("DATA_INTERMEDIA_FOLDER"),
-        kwargs["dag_run"].run_id,
-        kwargs["output"],
+        run_id,
+        output,
     )
-    to_path = pathlib.Path(os.environ.get("DATA_PREDICTION_OUTPUT"),)
+    to_path = pathlib.Path(
+        os.environ.get("DATA_PREDICTION_OUTPUT"),
+    )
     to_path.mkdir(parents=True, exist_ok=True)
     shutil.copy(from_path, to_path)

@@ -1,5 +1,6 @@
 from datetime import timedelta
-from textwrap import dedent
+import os
+import yaml
 
 # The DAG object; we'll need this to instantiate a DAG
 from airflow import DAG
@@ -10,7 +11,14 @@ from airflow.operators.dummy import DummyOperator
 from airflow.utils.dates import days_ago
 
 import prediction_tasks
-import prediction_config
+
+with open(
+    os.path.join(os.getenv("CONFIG_FOLDER"), "prediction_config.yml")
+) as f:
+    try:
+        prediction_config = yaml.safe_load(f)
+    except yaml.YAMLError as exc:
+        print(exc)
 
 # These args will get passed on to each operator
 # You can override them on a per-task basis during operator initialization
@@ -36,21 +44,27 @@ with DAG(
     start = DummyOperator(task_id="start")
     end = DummyOperator(task_id="end")
 
-    for task in prediction_config.tasks:
+    for task in prediction_config["pred_set_names"]:
+        prediction_config["input"] = prediction_config["input_file"].format(
+            task
+        )
+        prediction_config["output"] = prediction_config["output_file"].format(
+            task
+        )
+
         get_input = PythonOperator(
-            task_id="fetch_input_" + "_".join(task.name.split()).lower(),
+            task_id="fetch_input_" + task,
             python_callable=prediction_tasks.get_input,
-            op_kwargs={"input": task.input_file, "output": task.output_file},
+            op_kwargs=prediction_config,
         )
         predict = PythonOperator(
-            task_id="predict_" + "_".join(task.name.split()).lower(),
+            task_id="predict_" + task,
             python_callable=prediction_tasks.prediction,
-            op_kwargs={"input": task.input_file, "output": task.output_file},
+            op_kwargs=prediction_config,
         )
         output_result = PythonOperator(
-            task_id="output_result_" + "_".join(task.name.split()).lower(),
+            task_id="output_result_" + task,
             python_callable=prediction_tasks.output_result,
-            op_kwargs={"input": task.input_file, "output": task.output_file},
+            op_kwargs=prediction_config,
         )
         start >> get_input >> predict >> output_result >> end
-
