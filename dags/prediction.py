@@ -30,7 +30,7 @@ with DAG(
     description="Prediction DAG",
     schedule_interval=None,
     start_date=days_ago(2),
-    tags=["example", "prediction"],
+    tags=["prediction"],
 ) as dag:
 
     start = DummyOperator(task_id="start")
@@ -53,4 +53,3 @@ with DAG(
             op_kwargs={"input": task.input_file, "output": task.output_file},
         )
         start >> get_input >> predict >> output_result >> end
-

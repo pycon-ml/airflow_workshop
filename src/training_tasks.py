@@ -10,13 +10,42 @@ from sklearn.metrics import classification_report
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+import joblib
 import pyarrow as pa
 from pyarrow import parquet
-import joblib
 
+#Helper methods
+
+def _1d_nparray_to_parquet(array, path):
+    table = pa.Table.from_arrays(
+        [array],
+        ["0"],
+    )
+    parquet.write_table(table, path)
+
+
+def _2d_nparray_to_parquet(array, path):
+    table = pa.Table.from_arrays(
+        array,
+        names=[str(i) for i in range(len(array))],
+    )  # give names to each columns
+    parquet.write_table(table, path)
+
+
+def _parquet_to_2d_nparray(path):
+    table_from_parquet = parquet.read_table(path)
+    matrix_from_parquet = table_from_parquet.to_pandas().T.to_numpy()
+    return matrix_from_parquet
+
+
+def _parquet_to_1d_nparray(path):
+    table_from_parquet = parquet.read_table(path)
+    matrix_from_parquet = table_from_parquet.to_pandas().T.to_numpy()
+    return matrix_from_parquet[0]
 
 def data_extraction(*args, **kwargs):
-    """Extract data
+    """
+    Extract data
     In this example, it will copy data from source folder to intermedia folder
     """
     print(f'Run data_extraction with run_id: {kwargs["dag_run"].run_id}')
@@ -33,8 +62,7 @@ def data_extraction(*args, **kwargs):
 
 
 def data_validation(*args, **kwargs):
-    """Data validation
-    """
+    """Data validation"""
     assert os.environ.get("DATA_INTERMEDIA_FOLDER")
     input_path = pathlib.Path(
         os.environ.get("DATA_INTERMEDIA_FOLDER"),
@@ -46,34 +74,24 @@ def data_validation(*args, **kwargs):
     print(wine.info())
 
 
-def _1d_nparray_to_parquet(array, path):
-    table = pa.Table.from_arrays([array], ["0"],)
-    parquet.write_table(table, path)
-
-
-def _2d_nparray_to_parquet(array, path):
-    table = pa.Table.from_arrays(
-        array, names=[str(i) for i in range(len(array))],
-    )  # give names to each columns
-    parquet.write_table(table, path)
-
-
 def data_preparation(*args, **kwargs):
-    """Data preparation
-    """
+    """Data preparation"""
 
     assert os.environ.get("DATA_INTERMEDIA_FOLDER")
     run_path = pathlib.Path(
         os.environ.get("DATA_INTERMEDIA_FOLDER"), kwargs["dag_run"].run_id
     )
-    input_path = pathlib.Path(run_path, "winequality-red.csv",)
+    input_path = pathlib.Path(
+        run_path,
+        "winequality-red.csv",
+    )
     wine = pd.read_csv(input_path)
 
-    # Now seperate the dataset as response variable and feature variabes
+    # Now separate the dataset as response/target variable and feature variables
     X = wine.drop("quality", axis=1)
     y = wine["quality"]
 
-    # Train and Test splitting of data
+    # Train and test splitting of data
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=42
     )
@@ -98,21 +116,8 @@ def data_preparation(*args, **kwargs):
     _1d_nparray_to_parquet(y_test, pathlib.Path(run_path, "y_test.parquet"))
 
 
-def _parquet_to_2d_nparray(path):
-    table_from_parquet = parquet.read_table(path)
-    matrix_from_parquet = table_from_parquet.to_pandas().T.to_numpy()
-    return matrix_from_parquet
-
-
-def _parquet_to_1d_nparray(path):
-    table_from_parquet = parquet.read_table(path)
-    matrix_from_parquet = table_from_parquet.to_pandas().T.to_numpy()
-    return matrix_from_parquet[0]
-
-
 def model_training(*args, **kwargs):
-    """Model training
-    """
+    """Model training"""
     assert os.environ.get("DATA_INTERMEDIA_FOLDER")
     run_path = pathlib.Path(
         os.environ.get("DATA_INTERMEDIA_FOLDER"), kwargs["dag_run"].run_id
@@ -148,19 +153,19 @@ def model_training(*args, **kwargs):
         max_evals=10,
         trials=trials,
     )
-    print("optimization complete")
+    print("Hyperparameter tuning complete")
     best_model = trials.results[np.argmin([r["loss"] for r in trials.results])]
     params = best_model["params"]
-    print("best: ", params)
+    print("Best hyperparamaters: ", params)
 
     rfc = RandomForestClassifier(**params)
     rfc.fit(X_train, y_train)
+    # Save model as "random_forest_model.sav"
     joblib.dump(rfc, pathlib.Path(run_path, "random_forest_model.sav"))
 
 
 def model_evaluation(*args, **kwargs):
-    """Model evaluation
-    """
+    """Model evaluation"""
     assert os.environ.get("DATA_INTERMEDIA_FOLDER")
     run_path = pathlib.Path(
         os.environ.get("DATA_INTERMEDIA_FOLDER"), kwargs["dag_run"].run_id
@@ -173,17 +178,8 @@ def model_evaluation(*args, **kwargs):
     rfc_eval = cross_val_score(estimator=rfc, X=X_train, y=y_train, cv=10)
     print(f"Random forest model: {rfc_eval.mean()}")
 
-
-def eval_metrics(actual, pred):
-    rmse = np.sqrt(mean_squared_error(actual, pred))
-    mae = mean_absolute_error(actual, pred)
-    r2 = r2_score(actual, pred)
-    return rmse, mae, r2
-
-
 def model_validation(*args, **kwargs):
-    """Model validation
-    """
+    """Model validation"""
     assert os.environ.get("DATA_INTERMEDIA_FOLDER")
     run_path = pathlib.Path(
         os.environ.get("DATA_INTERMEDIA_FOLDER"), kwargs["dag_run"].run_id
@@ -194,8 +190,18 @@ def model_validation(*args, **kwargs):
     rfc = joblib.load(pathlib.Path(run_path, "random_forest_model.sav"))
 
     pred_rfc = rfc.predict(X_test)
+
+    # Print classification report
     print("\n" + classification_report(y_test, pred_rfc))
 
+    def eval_metrics(actual, pred):
+        # Calculate and return rmse, mae and r2 scores
+        rmse = np.sqrt(mean_squared_error(actual, pred))
+        mae = mean_absolute_error(actual, pred)
+        r2 = r2_score(actual, pred)
+        return rmse, mae, r2
+
+    # Log model and metrics into mlflow
     with mlflow.start_run(run_name=kwargs["dag_run"].run_id):
         (rmse, mae, r2) = eval_metrics(y_test, pred_rfc)
         mlflow.log_params(rfc.get_params())
@@ -207,4 +213,3 @@ def model_validation(*args, **kwargs):
             artifact_path="model",
             registered_model_name="ElasticnetWineModel",
         )
-
