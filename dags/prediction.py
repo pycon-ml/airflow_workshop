@@ -38,7 +38,7 @@ with DAG(
     description="Prediction DAG",
     schedule_interval=None,
     start_date=days_ago(2),
-    tags=["example", "prediction"],
+    tags=["prediction"],
 ) as dag:
 
     start = DummyOperator(task_id="start")
