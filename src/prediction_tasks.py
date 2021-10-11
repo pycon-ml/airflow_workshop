@@ -63,6 +63,8 @@ def output_result(*args, **kwargs):
         kwargs["dag_run"].run_id,
         kwargs["output"],
     )
-    to_path = pathlib.Path(os.environ.get("DATA_PREDICTION_OUTPUT"),)
+    to_path = pathlib.Path(
+        os.environ.get("DATA_PREDICTION_OUTPUT"),
+    )
     to_path.mkdir(parents=True, exist_ok=True)
     shutil.copy(from_path, to_path)
