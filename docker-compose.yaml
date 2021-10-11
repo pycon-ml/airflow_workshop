@@ -48,7 +48,7 @@ x-airflow-common:
     context: ./
     dockerfile: ./docker/airflow/Dockerfile
     args:
-      AIRFLOW_VERSION: 2.1.4-python3.7
+      AIRFLOW_IMAGE_NAME: ${AIRFLOW_IMAGE_NAME}
   environment:
     &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: CeleryExecutor
