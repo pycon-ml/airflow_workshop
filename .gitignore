@@ -115,6 +115,7 @@ venv.bak/
 
 # Rope project settings
 .ropeproject
+.vscode
 
 # mkdocs documentation
 /site
@@ -126,3 +127,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Some shared folders
+logs
+data/artifacts
+data/intermedia_data
+data/prediction_output

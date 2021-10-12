@@ -17,6 +17,7 @@ You need make sure docker config with at least 3GB RAM to start all the services
 Use docker-compose to build all the required docker images:
 
 ```
+docker-compose pull
 docker-compose build
 ```
 
