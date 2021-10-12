@@ -1,0 +1,18 @@
+input_file_name: winequality-red.csv
+tuning:
+  max_evals: 10
+  criterion:
+    - gini
+    - entropy
+  max_depth:
+    min_range: 1
+    max_range: 20
+  max_features:
+    min_range: 1
+    max_range: 5
+  n_estimators:
+    min_range: 1
+    max_range: 20
+model_tracking:
+  artifact_path: model
+  registered_model_name: "ElasticnetWineModel"
