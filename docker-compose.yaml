@@ -64,10 +64,10 @@ x-airflow-common:
     _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-}
     PYTHONPATH: /opt/airflow/src
     CONFIG_FOLDER: /opt/airflow/config
-    DATA_TRAINING_FOLDER: /opt/airflow/training_data
-    DATA_INTERMEDIA_FOLDER: /opt/airflow/intermedia_data
-    DATA_PREDICTION_INPUT: /opt/airflow/prediction_input
-    DATA_PREDICTION_OUTPUT: /opt/airflow/prediction_output
+    DATA_TRAINING_FOLDER: /opt/airflow/data/training_data
+    DATA_INTERMEDIA_FOLDER: /opt/airflow/data/intermedia_data
+    DATA_PREDICTION_INPUT: /opt/airflow/data/prediction_input
+    DATA_PREDICTION_OUTPUT: /opt/airflow/data/prediction_output
     MLFLOW_TRACKING_URI: http://mlflow:5000
   volumes:
     - ./config:/opt/airflow/config
@@ -75,10 +75,7 @@ x-airflow-common:
     - ./logs:/opt/airflow/logs
     - ./src:/opt/airflow/src
     - ./plugins:/opt/airflow/plugins
-    - ./data/training_data:/opt/airflow/training_data
-    - ./data/prediction_input:/opt/airflow/prediction_input
-    - ./data/prediction_output:/opt/airflow/prediction_output
-    - ./data/intermedia:/opt/airflow/intermedia_data
+    - ./data:/opt/airflow/data
     - ./data/artifacts:${ARTIFACT_PATH}
   user: "${AIRFLOW_UID:-50000}:${AIRFLOW_GID:-50000}"
   depends_on:
@@ -100,6 +97,8 @@ services:
       POSTGRES_USER: airflow
       POSTGRES_PASSWORD: airflow
       POSTGRES_DB: airflow
+    ports:
+      - 5433:5432
     volumes:
       - postgres-db-volume:/var/lib/postgresql/data
     healthcheck:
@@ -261,20 +260,29 @@ services:
   #       - ./apps:/opt/spark-apps
   #       - ./data:/opt/spark-data
 
-  # dev:
-  #   image: ${DOCKERHUB_ACC}/airflow-ml-dev
-  #   build:
-  #     context: ./
-  #     dockerfile: ./docker/dev_container/Dockerfile
-  #   container_name: dev
-  #   volumes:
-  #     - ./dags:/code/dags
-  #     - ./logs:/code/logs
-  #     - ./src:/code/src
-  #     - ./data/source:/code/source_data
-  #     - ./data/intermedia:/code/intermedia_data
-  #   environment:
-  #     MOODLE_DOCKER_DBTYPE: pgsql
-  #   tty: true
+  dev:
+    image: ${DOCKERHUB_ACC}/airflow-ml-dev
+    build:
+      context: ./
+      dockerfile: ./docker/dev_container/Dockerfile
+      args:
+        AIRFLOW_VERSION: ${AIRFLOW_VERSION}
+    container_name: dev
+    environment:
+      PYTHONPATH: /opt/airflow/src
+      CONFIG_FOLDER: /opt/airflow/config
+      DATA_TRAINING_FOLDER: /opt/airflow/data/training_data
+      DATA_INTERMEDIA_FOLDER: /opt/airflow/data/intermedia_data
+      DATA_PREDICTION_INPUT: /opt/airflow/data/prediction_input
+      DATA_PREDICTION_OUTPUT: /opt/airflow/data/prediction_output
+    volumes:
+      - ./config:/opt/airflow/config
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./src:/opt/airflow/src
+      - ./plugins:/opt/airflow/plugins
+      - ./data:/opt/airflow/data
+    tty: true
+
 volumes:
   postgres-db-volume:
