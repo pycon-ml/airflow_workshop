@@ -16,7 +16,6 @@ from pyarrow import parquet
 
 # Helper methods
 
-
 def _1d_nparray_to_parquet(array, path):
     table = pa.Table.from_arrays(
         [array],
