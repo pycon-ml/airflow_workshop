@@ -44,27 +44,6 @@ with DAG(
     start = DummyOperator(task_id="start")
     end = DummyOperator(task_id="end")
 
-    for task in prediction_config["pred_set_names"]:
-        prediction_config["input"] = prediction_config["input_file"].format(
-            task
-        )
-        prediction_config["output"] = prediction_config["output_file"].format(
-            task
-        )
-
-        get_input = PythonOperator(
-            task_id="fetch_input_" + task,
-            python_callable=prediction_tasks.get_input,
-            op_kwargs=prediction_config,
-        )
-        predict = PythonOperator(
-            task_id="predict_" + task,
-            python_callable=prediction_tasks.prediction,
-            op_kwargs=prediction_config,
-        )
-        output_result = PythonOperator(
-            task_id="output_result_" + task,
-            python_callable=prediction_tasks.output_result,
-            op_kwargs=prediction_config,
-        )
-        start >> get_input >> predict >> output_result >> end
+    # Try building a DAG that predicts on all three input files under DATA_PREDICTION_INPUT in parallel
+    # for example,
+    # for batch in prediction_config["pred_set_names"]:
