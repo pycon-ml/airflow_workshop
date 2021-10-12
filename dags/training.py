@@ -75,7 +75,6 @@ with DAG(
         """\
     #### Task Documentation
     This task copies data from source folder to intermedia folder
-
     """
     )
 
@@ -83,7 +82,14 @@ with DAG(
         """\
     #### Task Documentation
     This task prints some rows from the input data
+    """
+    )
 
+    data_preparation.doc_md = dedent(
+        """\
+    #### Task Documentation
+    This task splits the data into train and test and save them as parquet
+    files
     """
     )
 
