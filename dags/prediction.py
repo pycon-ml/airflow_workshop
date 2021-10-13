@@ -1,5 +1,7 @@
 from datetime import timedelta
 import os
+from textwrap import dedent
+
 import yaml
 
 # The DAG object; we'll need this to instantiate a DAG
@@ -67,4 +69,30 @@ with DAG(
             python_callable=prediction_tasks.output_result,
             op_kwargs=prediction_config,
         )
+        get_input.doc_md = dedent(
+            """\
+        #### Task Documentation
+        This task copies input data into intermediate folder
+        """
+        )
+
+        predict.doc_md = dedent(
+            """
+        #### Task Documentation
+        This task loads model and predicts on the given input data
+        """
+        )
+
+        output_result.doc_md = dedent(
+            """
+        #### Task Documentation
+        This task copies prediction output from intermediate to output folder
+        """
+        )
+
+        dag.doc_md = __doc__
+        dag.doc_md = """
+            Prediction DAG
+            """
+
         start >> get_input >> predict >> output_result >> end
