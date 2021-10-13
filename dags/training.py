@@ -93,11 +93,24 @@ with DAG(
     """
     )
 
-    data_preparation.doc_md = dedent(
+    model_training.doc_md = dedent(
         """\
     #### Task Documentation
-    This task splits the data into train and test and save them as
-    parquet files
+    This task contains model training and hyperparameter tuning using hyperopt
+    """
+    )
+
+    model_evaluation.doc_md = dedent(
+        """
+    #### Task Documentation
+    This task does evaluation for model using cross validation
+    """
+    )
+
+    model_validation.doc_md = dedent(
+        """
+    #### Task Documentation
+    This task validates the model and logs into mlflow
     """
     )
 
