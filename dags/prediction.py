@@ -4,6 +4,7 @@ import yaml
 
 # The DAG object; we'll need this to instantiate a DAG
 from airflow import DAG
+from textwrap import dedent
 
 # Operators; we need this to operate!
 from airflow.operators.python import PythonOperator
@@ -12,6 +13,7 @@ from airflow.utils.dates import days_ago
 
 import prediction_tasks
 
+# Read the "prediction_config.yml" into a dictionary
 with open(
     os.path.join(os.getenv("CONFIG_FOLDER"), "prediction_config.yml")
 ) as f:
@@ -44,6 +46,33 @@ with DAG(
     start = DummyOperator(task_id="start")
     end = DummyOperator(task_id="end")
 
-    # Try building a DAG that predicts on all three input files under DATA_PREDICTION_INPUT in parallel
-    # for example,
-    # for batch in prediction_config["pred_set_names"]:
+    batch_name = prediction_config["pred_set_names"][0]
+    prediction_config["input"] = prediction_config["input_file"].format(batch_name)
+    prediction_config["output"] = prediction_config["output_file"].format(batch_name)
+
+    get_input = PythonOperator(
+        task_id=f"fetch_input_{batch_name}",
+        python_callable=prediction_tasks.get_input,
+        op_kwargs=prediction_config,
+    )
+    predict = PythonOperator(
+        task_id=f"predict_{batch_name}",
+        python_callable=prediction_tasks.prediction,
+        op_kwargs=prediction_config,
+    )
+    output_result = PythonOperator(
+        task_id=f"output_result_{batch_name}",
+        python_callable=prediction_tasks.output_result,
+        op_kwargs=prediction_config,
+    )
+
+    dag.doc_md = __doc__
+    dag.doc_md = """
+        Prediction DAG
+        """
+
+    start >> get_input >> predict >> output_result >> end
+
+    # Now, your task is to try modifying the above DAG that predicts on all three input files under
+    # /data/prediction_input in parallel
+
