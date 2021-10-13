@@ -11,8 +11,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 import joblib
-import pyarrow as pa
-from pyarrow import parquet
+
 from helper import _1d_nparray_to_parquet, _2d_nparray_to_parquet, _parquet_to_2d_nparray, _parquet_to_1d_nparray
 
 def data_extraction(run_id, **context):

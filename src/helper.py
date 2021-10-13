@@ -1,3 +1,7 @@
+
+import pyarrow as pa
+from pyarrow import parquet
+
 # Helper methods
 
 def _1d_nparray_to_parquet(array, path):
