@@ -4,7 +4,6 @@ import yaml
 
 # The DAG object; we'll need this to instantiate a DAG
 from airflow import DAG
-from textwrap import dedent
 
 # Operators; we need this to operate!
 from airflow.operators.python import PythonOperator
@@ -47,8 +46,12 @@ with DAG(
     end = DummyOperator(task_id="end")
 
     batch_name = prediction_config["pred_set_names"][0]
-    prediction_config["input"] = prediction_config["input_file"].format(batch_name)
-    prediction_config["output"] = prediction_config["output_file"].format(batch_name)
+    prediction_config["input"] = prediction_config["input_file"].format(
+        batch_name
+    )
+    prediction_config["output"] = prediction_config["output_file"].format(
+        batch_name
+    )
 
     get_input = PythonOperator(
         task_id=f"fetch_input_{batch_name}",
@@ -73,6 +76,5 @@ with DAG(
 
     start >> get_input >> predict >> output_result >> end
 
-    # Now, your task is to try modifying the above DAG that predicts on all three input files under
-    # /data/prediction_input in parallel
-
+    # Now, your task is to try modifying the above DAG that predicts on all
+    # three input files under /data/prediction_input in parallel
