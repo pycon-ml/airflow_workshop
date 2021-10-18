@@ -204,85 +204,30 @@ services:
       VIRTUAL_PORT: ${MLFLOW_PORT}
       ARTIFACT_PATH: ${ARTIFACT_PATH}
     command: ./start.sh
-    # <<debug>>
-    # stdin_open: true
-    # tty: true
-    # command: /bin/bash
 
-  # spark-master:
-  #   image: ${DOCKERHUB_ACC}/spark
+  # dev:
+  #   image: ${DOCKERHUB_ACC}/airflow-ml-dev
   #   build:
   #     context: ./
-  #     dockerfile: ./docker/spark/Dockerfile
-  #   ports:
-  #     - "9090:8080"
-  #     - "7077:7077"
-  #   volumes:
-  #      - ./apps:/opt/spark-apps
-  #      - ./data:/opt/spark-data
+  #     dockerfile: ./docker/dev_container/Dockerfile
+  #     args:
+  #       AIRFLOW_VERSION: ${AIRFLOW_VERSION}
+  #   container_name: dev
   #   environment:
-  #     - SPARK_LOCAL_IP=spark-master
-  #     - SPARK_WORKLOAD=master
-  # spark-worker-a:
-  #   image: ${DOCKERHUB_ACC}/spark
-  #   ports:
-  #     - "9091:8080"
-  #     - "7000:7000"
-  #   depends_on:
-  #     - spark-master
-  #   environment:
-  #     - SPARK_MASTER=spark://spark-master:7077
-  #     - SPARK_WORKER_CORES=1
-  #     - SPARK_WORKER_MEMORY=1G
-  #     - SPARK_DRIVER_MEMORY=1G
-  #     - SPARK_EXECUTOR_MEMORY=1G
-  #     - SPARK_WORKLOAD=worker
-  #     - SPARK_LOCAL_IP=spark-worker-a
+  #     PYTHONPATH: /opt/airflow/src
+  #     CONFIG_FOLDER: /opt/airflow/config
+  #     DATA_TRAINING_FOLDER: /opt/airflow/data/training_data
+  #     DATA_INTERMEDIA_FOLDER: /opt/airflow/data/intermedia_data
+  #     DATA_PREDICTION_INPUT: /opt/airflow/data/prediction_input
+  #     DATA_PREDICTION_OUTPUT: /opt/airflow/data/prediction_output
   #   volumes:
-  #      - ./apps:/opt/spark-apps
-  #      - ./data:/opt/spark-data
-  # spark-worker-b:
-  #   image: ${DOCKERHUB_ACC}/spark
-  #   ports:
-  #     - "9092:8080"
-  #     - "7001:7000"
-  #   depends_on:
-  #     - spark-master
-  #   environment:
-  #     - SPARK_MASTER=spark://spark-master:7077
-  #     - SPARK_WORKER_CORES=1
-  #     - SPARK_WORKER_MEMORY=1G
-  #     - SPARK_DRIVER_MEMORY=1G
-  #     - SPARK_EXECUTOR_MEMORY=1G
-  #     - SPARK_WORKLOAD=worker
-  #     - SPARK_LOCAL_IP=spark-worker-b
-  #   volumes:
-  #       - ./apps:/opt/spark-apps
-  #       - ./data:/opt/spark-data
-
-  dev:
-    image: ${DOCKERHUB_ACC}/airflow-ml-dev
-    build:
-      context: ./
-      dockerfile: ./docker/dev_container/Dockerfile
-      args:
-        AIRFLOW_VERSION: ${AIRFLOW_VERSION}
-    container_name: dev
-    environment:
-      PYTHONPATH: /opt/airflow/src
-      CONFIG_FOLDER: /opt/airflow/config
-      DATA_TRAINING_FOLDER: /opt/airflow/data/training_data
-      DATA_INTERMEDIA_FOLDER: /opt/airflow/data/intermedia_data
-      DATA_PREDICTION_INPUT: /opt/airflow/data/prediction_input
-      DATA_PREDICTION_OUTPUT: /opt/airflow/data/prediction_output
-    volumes:
-      - ./config:/opt/airflow/config
-      - ./dags:/opt/airflow/dags
-      - ./logs:/opt/airflow/logs
-      - ./src:/opt/airflow/src
-      - ./plugins:/opt/airflow/plugins
-      - ./data:/opt/airflow/data
-    tty: true
+  #     - ./config:/opt/airflow/config
+  #     - ./dags:/opt/airflow/dags
+  #     - ./logs:/opt/airflow/logs
+  #     - ./src:/opt/airflow/src
+  #     - ./plugins:/opt/airflow/plugins
+  #     - ./data:/opt/airflow/data
+  #   tty: true
 
 volumes:
   postgres-db-volume:
