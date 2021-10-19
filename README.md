@@ -3,7 +3,6 @@
 This is the corresponding git repo for PyCon Sweden 2021 Airflow 2.x for ML Pipeline Workshop.
 
 ## Pre-requisites
-___
 
 The whole workshop will work on your local docker environment. 
 
@@ -21,7 +20,7 @@ Minimum resource requirement for docker to start all the services is mentioned b
 
 
 ## Getting started
-___
+
 
 ### 1. Clone this repo
 ```
@@ -65,7 +64,7 @@ http://localhost:5555
 - Exercise 2: Checkout to [feature/exercise2_predict_multi_batch](https://github.com/pycon-ml/airflow_workshop/tree/feature/exercise2_predict_multi_batch) branch.
 
 ## Tear down
-___
+
 Stop and remove containers, networks, images, and volumes
 
 ```
@@ -73,7 +72,6 @@ docker-compose down
 ```
 
 ## Setup local environment for debug
-___
 
 If there is needs to have local environment to develop and debug, you can use `conda` to create the environment:
 
