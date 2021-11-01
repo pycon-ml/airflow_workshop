@@ -41,6 +41,7 @@ docker-compose build
 ```
 docker-compose up
 ```
+
 ### 4. Access services from browser
 
 #### **Airflow**
@@ -50,6 +51,11 @@ docker-compose up
 *Username*: airflow
 
 *Password*: airflow
+
+If you are using linux and the browser doesn't open the GUI, you have the change the owner and group of 2 directories which were
+created from doing `docker-compose up`. If you do `ls -lh` you will see the logs and plugins directory have the owner and group as root.
+You need to change these by doing `sudo chown your_user_name_here logs plugins` and `sudo chgrp your_user_name_here logs plugins`.
+This should allow you to continue opening the Airflow UI.
 
 #### **MLflow**
 
